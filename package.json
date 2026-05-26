@@ -1,0 +1,22 @@
+{
+  "name": "@sean_pedersen/pi-context-skills",
+  "version": "0.1.0",
+  "description": "Pi coding agent extension that uses project context and the active LLM to select only relevant skills per project",
+  "keywords": ["pi-package", "skills", "context", "agent-skills"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SeanPedersen/pi-context-skills"
+  },
+  "pi": {
+    "extensions": ["./extensions"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
