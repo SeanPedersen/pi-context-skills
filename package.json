@@ -6,8 +6,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SeanPedersen/pi-context-skills"
+    "url": "git+https://github.com/SeanPedersen/pi-context-skills.git"
   },
+  "files": ["extensions", "README.md"],
   "pi": {
     "extensions": ["./extensions"]
   },
