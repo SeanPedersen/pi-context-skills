@@ -2,6 +2,8 @@
 
 A Pi coding agent extension that keeps skill context small by selecting only the skills relevant to the current project.
 
+Disclaimer: global skills only disappear from system prompt after first user message.
+
 ## Features
 
 - Discovers project-local, user, Claude, and custom skills
