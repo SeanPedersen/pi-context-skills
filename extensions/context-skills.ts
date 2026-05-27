@@ -36,6 +36,7 @@ const PI_DIR = ".pi";
 const SELECTION_FILE = "skills-selection.json";
 const MAX_CONTEXT_FILE_CHARS = 8_000;
 const MAX_LS_ENTRIES = 120;
+const MAX_STATUS_SKILL_NAMES_CHARS = 120;
 const ORANGE_ANSI = "\u001b[38;5;208m";
 const RESET_ANSI = "\u001b[0m";
 let lastLlmSelectionFailure: string | undefined;
@@ -461,6 +462,15 @@ function renderContextSkillsStatus(message: string): string {
   return `${ORANGE_ANSI}[Context-Skills]${RESET_ANSI}\n  ${message}`;
 }
 
+function renderSkillNamesPreview(skills: Skill[]): string {
+  if (skills.length === 0) return "";
+
+  const names = skills.map((skill) => skill.name).join(", ");
+  if (names.length <= MAX_STATUS_SKILL_NAMES_CHARS) return names;
+
+  return `${names.slice(0, MAX_STATUS_SKILL_NAMES_CHARS).trimEnd()}...`;
+}
+
 function renderSelectionMethod(selection: SkillSelection): string {
   if (selection.selectionMethod === "llm") return " (LLM)";
   return lastLlmSelectionFailure
@@ -468,12 +478,21 @@ function renderSelectionMethod(selection: SkillSelection): string {
     : " (default — LLM unavailable)";
 }
 
+function renderSelectionSummary(prefix: string, skills: Skill[], selection: SkillSelection): string {
+  const selected = selectedSkills(skills, selection);
+  const method = renderSelectionMethod(selection);
+  const skillNames = renderSkillNamesPreview(selected);
+  const skillNamesSuffix = skillNames ? ` ${skillNames}` : "";
+  return `${prefix}${method}: ${selected.length}/${skills.length} enabled${skillNamesSuffix}`;
+}
+
 export default async function (pi: ExtensionAPI) {
   const cwd = process.cwd();
   const skills = discoverSkills(cwd);
   if (skills.length === 0) return;
 
-  let selection = loadSelection(cwd) ?? defaultSelection();
+  const loadedSelection = loadSelection(cwd);
+  let selection = loadedSelection ?? defaultSelection();
   let firstRunSelection: Promise<void> | undefined;
 
   function shouldRunFirstSelection(): boolean {
@@ -491,14 +510,25 @@ export default async function (pi: ExtensionAPI) {
       selection = nextSelection ?? defaultSelection(lastLlmSelectionFailure);
       try {
         saveSelection(selectionPath(cwd), selection);
-        const count = selectedSkills(skills, selection).length;
-        const method = renderSelectionMethod(selection);
-        ctx.ui.notify(renderContextSkillsStatus(`Selected project skills: ${count}/${skills.length} enabled${method}`), "info");
       } catch {}
     });
 
     return firstRunSelection;
   }
+
+  function notifySelectionStatus(ctx: ExtensionContext): void {
+    ctx.ui.notify(renderContextSkillsStatus(renderSelectionSummary("Selected project skills", skills, selection)), "info");
+  }
+
+  pi.on("session_start", async (_event, ctx) => {
+    try {
+      await ensureFirstRunSelection(ctx);
+    } catch {}
+
+    try {
+      notifySelectionStatus(ctx);
+    } catch {}
+  });
 
   pi.on("before_agent_start", async (event, ctx) => {
     try {
@@ -537,7 +567,7 @@ export default async function (pi: ExtensionAPI) {
         }
         selection = nextSelection;
         saveSelection(path, selection);
-        ctx.ui.notify(renderContextSkillsStatus(`Reset project skill selection: ${selectedSkills(skills, selection).length}/${skills.length} enabled`), "info");
+        ctx.ui.notify(renderContextSkillsStatus(renderSelectionSummary("Reset project skill selection", skills, selection)), "info");
         return;
       }
 
@@ -551,7 +581,7 @@ export default async function (pi: ExtensionAPI) {
 
       selection = parseSelectionEditor(edited, skills);
       saveSelection(path, selection);
-      ctx.ui.notify(renderContextSkillsStatus(`Saved project skill selection: ${selectedSkills(skills, selection).length}/${skills.length} enabled`), "info");
+      ctx.ui.notify(renderContextSkillsStatus(renderSelectionSummary("Saved project skill selection", skills, selection)), "info");
     },
   });
 }

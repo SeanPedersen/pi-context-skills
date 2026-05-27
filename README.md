@@ -30,7 +30,7 @@ Or install directly from GitHub:
 
 ## Usage
 
-On first launch in a project, the extension discovers available skills and asks the active Pi model to select a relevant subset. The selected skills are saved to:
+On each Pi session start in a project with an existing selection, the extension shows the current skill summary immediately. When no saved selection exists, it discovers available skills and asks the active Pi model to select a relevant subset when needed. The selected skills are saved to:
 
 ```text
 .pi/skills-selection.json
