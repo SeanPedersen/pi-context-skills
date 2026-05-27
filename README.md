@@ -7,8 +7,8 @@ Disclaimer: global skills only disappear from system prompt after first user mes
 ## Features
 
 - Discovers project-local, user, Claude, and custom skills
-- Uses compact project context (dir tree, README etc.) to select using default model relevant skills on first run
-- Falls back to local heuristics when no model/auth is available
+- Uses the active Pi model plus compact project context (dir tree, README etc.) to select relevant skills on first run
+- Stores an empty conservative selection if the active model is unavailable or returns no usable response
 - Stores per-project selections in `.pi/skills-selection.json`
 - Injects only enabled skills into the agent system prompt
 - Provides `/skills` commands to list, edit, and reset selections
@@ -30,11 +30,13 @@ Or install directly from GitHub:
 
 ## Usage
 
-On first launch in a project, the extension discovers available skills and selects a relevant subset. The selected skills are saved to:
+On first launch in a project, the extension discovers available skills and asks the active Pi model to select a relevant subset. The selected skills are saved to:
 
 ```text
 .pi/skills-selection.json
 ```
+
+If selection fails, the extension saves an empty selection and continues without heuristics.
 
 The extension then replaces Pi's default skill section with only the enabled skills for that project.
 
@@ -67,7 +69,7 @@ The extension asks the active Pi model to select relevant skills using compact c
 - `package.json`
 - `pyproject.toml`
 
-If model selection is unavailable, it uses conservative heuristics and always enables project-local skills.
+If model selection is unavailable, it keeps the selection empty and surfaces the failure in the `[Context-Skills]` status.
 
 ## License
 
